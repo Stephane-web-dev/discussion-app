@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <title>Discussion Étudiante - Login & Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to right, #8e2de2, #4a00e0);
+      margin: 0;
+      padding: 0;
+      color: #fff;
+    }
+    .container {
+      max-width: 500px;
+      margin: 60px auto;
+      background: rgba(0,0,0,0.2);
+      padding: 30px;
+      border-radius: 10px;
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    input, button {
+      width: 100%;
+      padding: 10px;
+      margin: 10px 0;
+      border: none;
+      border-radius: 5px;
+    }
+    input {
+      background: #fff;
+      color: #000;
+    }
+    button {
+      background: #00cec9;
+      color: #fff;
+      cursor: pointer;
+    }
+    #chatbox {
+      display: none;
+      margin-top: 20px;
+    }
+    #messages {
+      height: 200px;
+      overflow-y: scroll;
+      background: #222;
+      padding: 10px;
+      border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    .message {
+      margin-bottom: 8px;
+      padding: 5px;
+      background: #444;
+      border-radius: 4px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>Connexion Étudiante</h2>
+    <form id="loginForm">
+      <input type="text" id="username" placeholder="Nom d'utilisateur" required>
+      <input type="password" id="password" placeholder="Mot de passe" required>
+      <button type="submit">Se connecter</button>
+    </form>
+
+    <hr style="margin: 20px 0;">
+
+    <h2>Inscription</h2>
+    <form id="registerForm">
+      <input type="text" id="newUser" placeholder="Nom d'utilisateur" required>
+      <input type="password" id="newPass" placeholder="Mot de passe" required>
+      <input type="text" id="studentCode" placeholder="Code Étudiant" required>
+      <button type="submit">S'inscrire</button>
+    </form>
+
+    <div id="chatbox">
+      <h2>Discussion</h2>
+      <div id="messages"></div>
+      <input type="text" id="messageInput" placeholder="Écrire un message">
+      <button onclick="sendMessage()">Envoyer</button>
+      <input type="file" id="imageInput" accept="image/*">
+    </div>
+  </div>
+
+  <script>
+    const loginForm = document.getElementById("loginForm");
+    const registerForm = document.getElementById("registerForm");
+    const chatbox = document.getElementById("chatbox");
+
+    loginForm.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const res = await fetch('login.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          username: username.value,
+          password: password.value
+        })
+      });
+      const result = await res.text();
+      if (result === "success") {
+        loginForm.style.display = "none";
+        registerForm.style.display = "none";
+        chatbox.style.display = "block";
+        loadMessages();
+      } else {
+        alert("Identifiants incorrects !");
+      }
+    });
+
+    registerForm.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const res = await fetch('register.php', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          username: newUser.value,
+          password: newPass.value,
+          code: studentCode.value
+        })
+      });
+      const result = await res.text();
+      alert(result);
+    });
+
+  async function sendMessage() {
+  const msg = messageInput.value;
+  const img = imageInput.files[0];
+  const formData = new FormData();
+  formData.append("message", msg);
+  if (img) formData.append("image", img);
+
+  await fetch('send.php', {
+    method: 'POST',
+    body: formData
+  });
+
+  messageInput.value = "";
+  imageInput.value = null;
+  loadMessages();
+}
+    async function loadMessages() {
+      const res = await fetch('fetch.php');
+      const messages = await res.json();
+      const messagesBox = document.getElementById("messages");
+      messagesBox.innerHTML = "";
+      messages.forEach(msg => {
+        const div = document.createElement("div");
+        div.className = "message";
+        div.textContent = msg;
+        div.innerHTML = msg;
+        messagesBox.appendChild(div);
+      });
+    }
+  </script>
+</body>
+</html>
